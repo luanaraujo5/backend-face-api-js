@@ -2,13 +2,22 @@ import Database from "better-sqlite3";
 import { mkdirSync, existsSync } from "fs";
 import path from "path";
 
+/**
+ * Database configuration and initialization
+ */
 const dbPath = process.env.DB_PATH || "./data/db.sqlite";
 const dir = path.dirname(dbPath);
 if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 
+/**
+ * SQLite database instance
+ */
 export const db = new Database(dbPath);
 
-// migrations (idempotentes)
+/**
+ * Run database migrations (idempotent)
+ * Creates tables and indexes if they don't exist
+ */
 function migrate() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS person (
@@ -32,6 +41,7 @@ function migrate() {
   console.log("✅ Migrations OK");
 }
 
+// Run migrations on module load
 migrate();
 
 if (process.argv.includes("--migrate")) {

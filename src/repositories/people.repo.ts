@@ -1,6 +1,12 @@
 import { db } from "../config/db.js";
 import { floatArrayToBuffer, bufferToFloatArray } from "../utils/embeddings.js";
 
+/**
+ * Insert or get existing person by name
+ * @param {string} name - Person's name
+ * @returns {number} Person ID from database
+ * @throws {Error} If unable to get person ID
+ */
 export function upsertPerson(name: string): number {
   db.prepare(`INSERT OR IGNORE INTO person(name) VALUES (?)`).run(name);
   const row = db.prepare(`SELECT id FROM person WHERE name = ?`).get(name) as { id: number } | undefined;
@@ -8,6 +14,11 @@ export function upsertPerson(name: string): number {
   return row.id;
 }
 
+/**
+ * Insert face descriptors for a person
+ * @param {number} personId - Person ID from database
+ * @param {number[][]} descriptors - Array of face descriptor arrays
+ */
 export function insertDescriptors(personId: number, descriptors: number[][]): void {
   const stmt = db.prepare(`INSERT INTO descriptor(person_id, vector) VALUES (?, ?)`);
   const insertMany = db.transaction((arr: number[][]) => {
@@ -16,6 +27,11 @@ export function insertDescriptors(personId: number, descriptors: number[][]): vo
   insertMany(descriptors);
 }
 
+/**
+ * Delete person and all their descriptors by name
+ * @param {string} name - Person's name to delete
+ * @returns {boolean} True if person was deleted, false if not found
+ */
 export function deletePersonByName(name: string): boolean {
   const row = db.prepare(`SELECT id FROM person WHERE name = ?`).get(name) as { id: number } | undefined;
   if (!row) return false;
@@ -23,6 +39,10 @@ export function deletePersonByName(name: string): boolean {
   return true;
 }
 
+/**
+ * Get all people with their face descriptors
+ * @returns {Array<{name: string, descriptors: number[][]}>} Array of people with their descriptors
+ */
 export function listPeopleWithDescriptors(): { name: string; descriptors: number[][] }[] {
   const rows = db
     .prepare(
