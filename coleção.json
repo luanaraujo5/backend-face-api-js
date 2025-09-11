@@ -1,0 +1,119 @@
+{
+  "info": {
+    "name": "Face Recog Backend (TS) - Postman",
+    "_postman_id": "6f8c3d7d-3b9d-4a1a-8a6b-2c1f8a6a9f11",
+    "description": "Coleção para testar o backend TypeScript + Express + SQLite.\nInclui: /health, /api/register, /api/people, /api/person/:name",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "testName", "value": "Luan_Test" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "const body = pm.response.json();",
+              "pm.test(\"ok=true\", function () { pm.expect(body.ok).to.be.true; });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+        ]
+    },
+    {
+      "name": "Register (gera descritores aleatórios)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const NUM_DESC = 5; // 5 fotos",
+              "const DIM = 128;   // tamanho típico do embedding",
+              "function rand() { return parseFloat((Math.random()*2 - 1).toFixed(6)); }",
+              "const descriptors = Array.from({length: NUM_DESC}, () => Array.from({length: DIM}, rand));",
+              "pm.variables.set('descriptors', JSON.stringify(descriptors));"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "const body = pm.response.json();",
+              "pm.test(\"ok=true\", function () { pm.expect(body.ok).to.be.true; });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{testName}}\",\n  \"descriptors\": {{descriptors}}\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/register", "host": ["{{baseUrl}}"], "path": ["api", "register"] }
+      }
+    },
+    {
+      "name": "People (listar embeddings)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/people", "host": ["{{baseUrl}}"], "path": ["api", "people"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "const data = pm.response.json();",
+              "pm.test(\"retorna array\", function () { pm.expect(Array.isArray(data)).to.be.true; });",
+              "pm.test(\"contém testName\", function () { pm.expect(data.some(p => p.name === pm.variables.get('testName'))).to.be.true; });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delete Person (limpar cadastros de teste)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/person/{{testName}}", "host": ["{{baseUrl}}"], "path": ["api", "person", "{{testName}}"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "const body = pm.response.json();",
+              "pm.test(\"ok=true\", function () { pm.expect(body.ok).to.be.true; });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ],
+  "protocolProfileBehavior": {}
+}
