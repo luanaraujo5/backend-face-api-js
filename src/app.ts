@@ -60,7 +60,7 @@ app.use("/docs/swagger", swaggerUi.serve, swaggerUi.setup(specs, {
 }));
 
 app.use("/docs", apiReference({
-  theme: 'purple',
+  theme: 'bluePlanet',
   spec: {
     content: specs
   }
